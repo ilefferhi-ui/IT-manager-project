@@ -1,1 +1,462 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IT Manager — Inventaire & Tickets</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
 
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <div class="logo">
+      <span class="logo-bracket">[</span>IT<span class="logo-accent">MGR</span><span class="logo-bracket">]</span>
+    </div>
+    <span class="header-sub">Système de gestion IT</span>
+  </div>
+  <div class="header-stats" id="headerStats">
+    <div class="hstat"><span class="hstat-val" id="hs-actifs">—</span><span class="hstat-lbl">Actifs</span></div>
+    <div class="hstat sep"><span class="hstat-val" id="hs-pannes">—</span><span class="hstat-lbl">En panne</span></div>
+    <div class="hstat sep"><span class="hstat-val" id="hs-ouverts">—</span><span class="hstat-lbl">Tickets ouverts</span></div>
+    <div class="hstat sep alert" id="hs-crit-wrap"><span class="hstat-val" id="hs-critiques">—</span><span class="hstat-lbl">Critiques</span></div>
+  </div>
+</header>
+
+<!-- TABS -->
+<nav class="tabs">
+  <button class="tab active" onclick="switchTab('inventaire')">
+    <span class="tab-icon">▣</span> Inventaire
+  </button>
+  <button class="tab" onclick="switchTab('tickets')">
+    <span class="tab-icon">◈</span> Tickets
+    <span class="badge" id="badgeTickets">0</span>
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════════════════
+     ONGLET INVENTAIRE
+════════════════════════════════════════════════ -->
+<div id="tab-inventaire" class="tab-content active">
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <input type="text" id="searchMat" placeholder="Rechercher un matériel…" oninput="filterMats()">
+      <select id="filterType" onchange="filterMats()">
+        <option value="">Tous les types</option>
+        <option>PC Bureau</option><option>Laptop</option><option>Switch</option>
+        <option>Imprimante</option><option>Serveur</option><option>Autre</option>
+      </select>
+      <select id="filterStatut" onchange="filterMats()">
+        <option value="">Tous les statuts</option>
+        <option>Actif</option><option>En panne</option><option>Maintenance</option><option>Retiré</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="openModal('matModal')">+ Ajouter matériel</button>
+  </div>
+
+  <div class="table-wrap">
+    <table id="tableMat">
+      <thead>
+        <tr>
+          <th>ID</th><th>Nom</th><th>Type</th><th>Marque / Modèle</th>
+          <th>N° Série</th><th>Localisation</th><th>Statut</th><th>Tickets</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="bodyMat"></tbody>
+    </table>
+    <div class="empty-state" id="emptyMat" style="display:none">Aucun matériel trouvé.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     ONGLET TICKETS
+════════════════════════════════════════════════ -->
+<div id="tab-tickets" class="tab-content">
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <input type="text" id="searchTick" placeholder="Rechercher un ticket…" oninput="filterTicks()">
+      <select id="filterPrio" onchange="filterTicks()">
+        <option value="">Toutes priorités</option>
+        <option>Critique</option><option>Haute</option><option>Moyenne</option><option>Basse</option>
+      </select>
+      <select id="filterStatutTick" onchange="filterTicks()">
+        <option value="">Tous statuts</option>
+        <option>Ouvert</option><option>En cours</option><option>Résolu</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="openModal('tickModal')">+ Nouveau ticket</button>
+  </div>
+
+  <div class="table-wrap">
+    <table id="tableTick">
+      <thead>
+        <tr>
+          <th>ID</th><th>Titre</th><th>Priorité</th><th>Statut</th>
+          <th>Matériel lié</th><th>Demandeur</th><th>Technicien</th><th>Date</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="bodyTick"></tbody>
+    </table>
+    <div class="empty-state" id="emptyTick" style="display:none">Aucun ticket trouvé.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     MODAL — MATÉRIEL
+════════════════════════════════════════════════ -->
+<div id="matModal" class="modal-bg" onclick="closeModalBg(event,'matModal')">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="matModalTitle">Nouveau matériel</span>
+      <button class="modal-close" onclick="closeModal('matModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="matId">
+      <div class="form-grid">
+        <div class="form-group span2">
+          <label>Nom *</label>
+          <input type="text" id="matNom" placeholder="PC-Bureau-03">
+        </div>
+        <div class="form-group">
+          <label>Type *</label>
+          <select id="matType">
+            <option>PC Bureau</option><option>Laptop</option><option>Switch</option>
+            <option>Imprimante</option><option>Serveur</option><option>Autre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Statut</label>
+          <select id="matStatut">
+            <option>Actif</option><option>En panne</option><option>Maintenance</option><option>Retiré</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Marque</label>
+          <input type="text" id="matMarque" placeholder="Dell, HP…">
+        </div>
+        <div class="form-group">
+          <label>Modèle</label>
+          <input type="text" id="matModele" placeholder="OptiPlex 7090">
+        </div>
+        <div class="form-group">
+          <label>N° de série</label>
+          <input type="text" id="matSerie" placeholder="SN-XXX">
+        </div>
+        <div class="form-group">
+          <label>Localisation</label>
+          <input type="text" id="matLoc" placeholder="Salle 101">
+        </div>
+        <div class="form-group span2">
+          <label>Date d'achat</label>
+          <input type="date" id="matDate">
+        </div>
+        <div class="form-group span2">
+          <label>Notes</label>
+          <textarea id="matNotes" rows="2" placeholder="Remarques…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('matModal')">Annuler</button>
+      <button class="btn-primary" onclick="saveMateriel()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     MODAL — TICKET
+════════════════════════════════════════════════ -->
+<div id="tickModal" class="modal-bg" onclick="closeModalBg(event,'tickModal')">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="tickModalTitle">Nouveau ticket</span>
+      <button class="modal-close" onclick="closeModal('tickModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="tickId">
+      <div class="form-grid">
+        <div class="form-group span2">
+          <label>Titre *</label>
+          <input type="text" id="tickTitre" placeholder="Description courte du problème">
+        </div>
+        <div class="form-group">
+          <label>Priorité</label>
+          <select id="tickPrio">
+            <option>Basse</option><option selected>Moyenne</option><option>Haute</option><option>Critique</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Statut</label>
+          <select id="tickStatut">
+            <option>Ouvert</option><option>En cours</option><option>Résolu</option>
+          </select>
+        </div>
+        <div class="form-group span2">
+          <label>Matériel concerné</label>
+          <select id="tickMat">
+            <option value="">— Aucun matériel spécifique —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Demandeur</label>
+          <input type="text" id="tickDem" placeholder="Nom du demandeur">
+        </div>
+        <div class="form-group">
+          <label>Technicien assigné</label>
+          <input type="text" id="tickTech" placeholder="Technicien">
+        </div>
+        <div class="form-group span2">
+          <label>Description</label>
+          <textarea id="tickDesc" rows="3" placeholder="Détails du problème…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('tickModal')">Annuler</button>
+      <button class="btn-primary" onclick="saveTicket()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────
+let materiels = [];
+let tickets   = [];
+
+// ─── INIT ─────────────────────────────────────────────────
+async function loadAll() {
+  await Promise.all([loadMats(), loadTicks(), loadStats()]);
+}
+
+async function loadStats() {
+  const s = await fetch('/api/stats').then(r=>r.json());
+  document.getElementById('hs-actifs').textContent   = s.materiels_actifs;
+  document.getElementById('hs-pannes').textContent   = s.materiels_en_panne;
+  document.getElementById('hs-ouverts').textContent  = s.tickets_ouverts;
+  document.getElementById('hs-critiques').textContent = s.tickets_critiques;
+  document.getElementById('badgeTickets').textContent = s.tickets_ouverts;
+  document.getElementById('hs-crit-wrap').classList.toggle('flash', s.tickets_critiques > 0);
+}
+
+// ─── MATERIELS ────────────────────────────────────────────
+async function loadMats() {
+  materiels = await fetch('/api/materiels').then(r=>r.json());
+  renderMats(materiels);
+  populateMatSelect();
+}
+
+function renderMats(data) {
+  const body = document.getElementById('bodyMat');
+  const empty = document.getElementById('emptyMat');
+  if (!data.length) { body.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  body.innerHTML = data.map(m => `
+    <tr class="${m.statut==='En panne'?'row-danger':m.statut==='Maintenance'?'row-warn':''}">
+      <td class="mono dim">#${m.id}</td>
+      <td class="bold">${m.nom}</td>
+      <td><span class="chip chip-type">${m.type}</span></td>
+      <td>${m.marque} ${m.modele}</td>
+      <td class="mono dim">${m.numero_serie||'—'}</td>
+      <td>${m.localisation||'—'}</td>
+      <td><span class="chip chip-statut chip-${m.statut.toLowerCase().replace(' ','-')}">${m.statut}</span></td>
+      <td class="center">${m.nb_tickets>0?`<span class="chip chip-warn">${m.nb_tickets}</span>`:'<span class="dim">0</span>'}</td>
+      <td class="actions">
+        <button onclick="editMat(${m.id})" title="Modifier">✎</button>
+        <button onclick="delMat(${m.id})" title="Supprimer" class="del">✕</button>
+      </td>
+    </tr>`).join('');
+}
+
+function filterMats() {
+  const q = document.getElementById('searchMat').value.toLowerCase();
+  const t = document.getElementById('filterType').value;
+  const s = document.getElementById('filterStatut').value;
+  renderMats(materiels.filter(m =>
+    (!q || m.nom.toLowerCase().includes(q) || (m.marque+' '+m.modele).toLowerCase().includes(q) || (m.localisation||'').toLowerCase().includes(q)) &&
+    (!t || m.type === t) && (!s || m.statut === s)
+  ));
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+function closeModalBg(e, id) {
+  if (e.target.id === id) closeModal(id);
+}
+
+function resetMatForm() {
+  ['matId','matNom','matMarque','matModele','matSerie','matLoc','matDate','matNotes'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('matType').value='PC Bureau';
+  document.getElementById('matStatut').value='Actif';
+  document.getElementById('matModalTitle').textContent='Nouveau matériel';
+}
+
+function editMat(id) {
+  const m = materiels.find(x=>x.id===id);
+  resetMatForm();
+  document.getElementById('matId').value    = m.id;
+  document.getElementById('matNom').value   = m.nom;
+  document.getElementById('matType').value  = m.type;
+  document.getElementById('matStatut').value= m.statut;
+  document.getElementById('matMarque').value= m.marque;
+  document.getElementById('matModele').value= m.modele;
+  document.getElementById('matSerie').value = m.numero_serie;
+  document.getElementById('matLoc').value   = m.localisation;
+  document.getElementById('matDate').value  = m.date_achat;
+  document.getElementById('matNotes').value = m.notes;
+  document.getElementById('matModalTitle').textContent='Modifier matériel';
+  openModal('matModal');
+}
+
+async function saveMateriel() {
+  const id = document.getElementById('matId').value;
+  const nom = document.getElementById('matNom').value.trim();
+  if (!nom) { toast('Le nom est obligatoire','error'); return; }
+  const data = {
+    nom, type: document.getElementById('matType').value,
+    statut: document.getElementById('matStatut').value,
+    marque: document.getElementById('matMarque').value,
+    modele: document.getElementById('matModele').value,
+    numero_serie: document.getElementById('matSerie').value,
+    localisation: document.getElementById('matLoc').value,
+    date_achat: document.getElementById('matDate').value,
+    notes: document.getElementById('matNotes').value,
+  };
+  const url = id ? `/api/materiels/${id}` : '/api/materiels';
+  const method = id ? 'PUT' : 'POST';
+  await fetch(url, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+  closeModal('matModal'); resetMatForm(); loadAll();
+  toast(id ? 'Matériel mis à jour ✓' : 'Matériel ajouté ✓');
+}
+
+async function delMat(id) {
+  if (!confirm('Supprimer ce matériel ?')) return;
+  await fetch(`/api/materiels/${id}`, {method:'DELETE'});
+  loadAll(); toast('Matériel supprimé');
+}
+
+// ─── TICKETS ──────────────────────────────────────────────
+async function loadTicks() {
+  tickets = await fetch('/api/tickets').then(r=>r.json());
+  renderTicks(tickets);
+}
+
+function renderTicks(data) {
+  const body  = document.getElementById('bodyTick');
+  const empty = document.getElementById('emptyTick');
+  if (!data.length) { body.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  body.innerHTML = data.map(t => `
+    <tr class="${t.priorite==='Critique'?'row-critical':t.priorite==='Haute'?'row-danger':''}">
+      <td class="mono dim">#${t.id}</td>
+      <td class="bold">${t.titre}</td>
+      <td><span class="chip chip-prio chip-prio-${t.priorite.toLowerCase()}">${t.priorite}</span></td>
+      <td><span class="chip chip-statut chip-${t.statut.toLowerCase().replace(' ','-')}">${t.statut}</span></td>
+      <td>${t.materiel_nom?`<span class="chip chip-type">${t.materiel_nom}</span>`:'<span class="dim">—</span>'}</td>
+      <td>${t.demandeur||'—'}</td>
+      <td>${t.technicien||'<span class="dim">Non assigné</span>'}</td>
+      <td class="mono dim small">${t.date_creation||'—'}</td>
+      <td class="actions">
+        <button onclick="editTick(${t.id})" title="Modifier">✎</button>
+        <button onclick="delTick(${t.id})" title="Supprimer" class="del">✕</button>
+      </td>
+    </tr>`).join('');
+}
+
+function filterTicks() {
+  const q = document.getElementById('searchTick').value.toLowerCase();
+  const p = document.getElementById('filterPrio').value;
+  const s = document.getElementById('filterStatutTick').value;
+  renderTicks(tickets.filter(t =>
+    (!q || t.titre.toLowerCase().includes(q) || (t.materiel_nom||'').toLowerCase().includes(q) || (t.demandeur||'').toLowerCase().includes(q)) &&
+    (!p || t.priorite === p) && (!s || t.statut === s)
+  ));
+}
+
+function populateMatSelect() {
+  const sel = document.getElementById('tickMat');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Aucun matériel spécifique —</option>' +
+    materiels.map(m=>`<option value="${m.id}" ${cur==m.id?'selected':''}>${m.nom} (${m.type})</option>`).join('');
+}
+
+function resetTickForm() {
+  ['tickId','tickTitre','tickDem','tickTech','tickDesc'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('tickPrio').value='Moyenne';
+  document.getElementById('tickStatut').value='Ouvert';
+  document.getElementById('tickMat').value='';
+  document.getElementById('tickModalTitle').textContent='Nouveau ticket';
+}
+
+function editTick(id) {
+  const t = tickets.find(x=>x.id===id);
+  resetTickForm();
+  document.getElementById('tickId').value    = t.id;
+  document.getElementById('tickTitre').value = t.titre;
+  document.getElementById('tickPrio').value  = t.priorite;
+  document.getElementById('tickStatut').value= t.statut;
+  document.getElementById('tickMat').value   = t.materiel_id||'';
+  document.getElementById('tickDem').value   = t.demandeur;
+  document.getElementById('tickTech').value  = t.technicien;
+  document.getElementById('tickDesc').value  = t.description;
+  document.getElementById('tickModalTitle').textContent='Modifier ticket';
+  openModal('tickModal');
+}
+
+async function saveTicket() {
+  const id    = document.getElementById('tickId').value;
+  const titre = document.getElementById('tickTitre').value.trim();
+  if (!titre) { toast('Le titre est obligatoire','error'); return; }
+  const data = {
+    titre, priorite: document.getElementById('tickPrio').value,
+    statut: document.getElementById('tickStatut').value,
+    materiel_id: document.getElementById('tickMat').value || null,
+    demandeur: document.getElementById('tickDem').value,
+    technicien: document.getElementById('tickTech').value,
+    description: document.getElementById('tickDesc').value,
+  };
+  const url = id ? `/api/tickets/${id}` : '/api/tickets';
+  const method = id ? 'PUT' : 'POST';
+  await fetch(url, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+  closeModal('tickModal'); resetTickForm(); loadAll();
+  toast(id ? 'Ticket mis à jour ✓' : 'Ticket créé ✓');
+}
+
+async function delTick(id) {
+  if (!confirm('Supprimer ce ticket ?')) return;
+  await fetch(`/api/tickets/${id}`, {method:'DELETE'});
+  loadAll(); toast('Ticket supprimé');
+}
+
+// ─── TABS ─────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  document.querySelector(`.tab[onclick="switchTab('${name}')"]`).classList.add('active');
+}
+
+// ─── TOAST ────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show ${type}`;
+  setTimeout(()=>t.className='', 2800);
+}
+
+// ─── BOOT ─────────────────────────────────────────────────
+loadAll();
+document.getElementById('matModal').addEventListener('click',()=>{});
+document.querySelector('button[onclick*="matModal"]').addEventListener('click', resetMatForm);
+document.querySelector('button[onclick*="tickModal"]').addEventListener('click', ()=>{ resetTickForm(); populateMatSelect(); });
+</script>
+</body>
+</html>

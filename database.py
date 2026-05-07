@@ -1,6 +1,5 @@
 import sqlite3
-import g as flask_g
-
+from flask import g as flask_g
 DB_PATH = 'it_manager.db'
 
 def get_db():

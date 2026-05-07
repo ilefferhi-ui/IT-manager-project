@@ -11,7 +11,8 @@ pip install -r requirements.txt
 ```bash
 python app.py
 ```
+# Open
+```bash
+  follow the link provided just after the warning 
+  ```
 
-Open:
-
-http://localhost:5000

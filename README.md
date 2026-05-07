@@ -6,8 +6,12 @@
 pip install -r requirements.txt
 ```
 
-# Run
+# Enter project folder
+```bash
+ cd IT-manager-project
 
+ ```
+# Run
 ```bash
 python app.py
 ```

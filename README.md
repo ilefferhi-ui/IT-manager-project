@@ -3,14 +3,9 @@
 # Install
 
 ```bash
-pip install -r requirements.txt
+pip install flask
 ```
 
-# Enter project folder
-```bash
- cd IT-manager-project
-
- ```
 # Run
 ```bash
 python app.py
